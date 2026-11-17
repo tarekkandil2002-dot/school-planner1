@@ -16,7 +16,7 @@ header b{font-size:22px;color:#FFE14D;text-shadow:0 2px 0 rgba(0,0,0,.2)}header 
 #warn{background:#fff;color:var(--red);border-radius:12px;padding:6px 10px;font-weight:800;font-size:13px;white-space:nowrap}
 main{max-width:1000px;margin:-14px auto 0;padding:0 10px}
 .card{background:#fff;border-radius:16px;padding:12px;margin:10px 0;box-shadow:0 3px 10px rgba(0,0,0,.08)}
-.dashgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.dashstat{padding:14px;border-radius:14px;background:#F8FAFC;border:1px solid var(--line)}.dashstat b{display:block;font-size:27px;color:var(--g);line-height:1.1}.dashstat small{color:var(--mute)}.dashlist{display:grid;gap:7px}.dashrow{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:9px 10px;background:#F8FAFC;border-radius:10px}.dashrow b{font-size:14px}.dashrow small{color:var(--mute)}
+.dashgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.dashstat{padding:14px;border-radius:14px;background:#F8FAFC;border:1px solid var(--line)}.dashstat b{display:block;font-size:27px;color:var(--g);line-height:1.1}.dashstat small{color:var(--mute)}.dashlist{display:grid;gap:7px}.dashrow{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:9px 10px;background:#F8FAFC;border-radius:10px}.dashrow b{font-size:14px}.dashrow small{color:var(--mute)}.dropzone{border:2px dashed #16A34A;border-radius:14px;background:#F0FDF4;padding:18px;text-align:center;cursor:pointer}.dropzone.drag{background:#DCFCE7;outline:3px solid #86EFAC}.dropzone b{display:block;color:#166534}.dropzone small{display:block;color:var(--mute);margin-top:4px}
 .c{text-align:center;line-height:1.8}
 .btn{border:0;border-radius:12px;padding:11px 16px;font:inherit;font-weight:800;background:var(--gold);color:#fff;box-shadow:0 3px 0 rgba(0,0,0,.18);cursor:pointer}
 .btn.alt{background:#2563EB}.btn.red{background:var(--red)}.btn.ghost{background:#fff;color:var(--ink);border:1px solid var(--line);box-shadow:none}.btn.g{background:var(--g2)}
@@ -75,6 +75,7 @@ dialog::backdrop{background:rgba(20,40,30,.55)}
 <div id="toast" hidden></div>
 <div id="printArea"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script>
 const $=s=>document.querySelector(s),pad2=n=>String(n).padStart(2,'0');
 const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -143,6 +144,21 @@ const dl=(name,text)=>{const f=new File([text],name,{type:'application/json'});
   return(async()=>{try{if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:name});return}}catch(e){if(e.name==='AbortError')return}
   const a=document.createElement('a');a.href=URL.createObjectURL(f);a.download=name;document.body.appendChild(a);a.click();a.remove()})()};
 
+function normHeader(v){return String(v||'').toLowerCase().replace(/[\\s_\-]/g,'').replace(/[إأآ]/g,'ا')}
+function csvRows(text){const rows=[];let row=[],cell='',quote=false;for(let i=0;i<text.length;i++){const ch=text[i],nx=text[i+1];if(ch==='"'&&quote&&nx==='"'){cell+='"';i++;continue}if(ch==='"'){quote=!quote;continue}if(ch===','&&!quote){row.push(cell.trim());cell='';continue}if((ch==='\\n'||ch==='\\r')&&!quote){if(ch==='\\r'&&nx==='\\n')i++;row.push(cell.trim());if(row.some(Boolean))rows.push(row);row=[];cell='';continue}cell+=ch}if(cell||row.length){row.push(cell.trim());rows.push(row)}return rows}
+function mapTeacherRows(rows){
+  if(!rows.length)return[];const headers=rows[0].map(normHeader),find=names=>{const i=headers.findIndex(h=>names.some(n=>h.includes(n)));return i<0?-1:i};
+  const ix={code:find(['الكود','code','كود']),nationalId:find(['الرقم القومي','الرقمالقومي','nationalid','national']),name:find(['اسم المعلم','الاسم','name']),subject:find(['المادة','subject']),quota:find(['النصاب','quota']),phone:find(['التليفون','الهاتف','الموبايل','phone'])};
+  if(ix.name<0&&ix.code<0)return[];return rows.slice(1).map(r=>({code:String(r[ix.code<0?0:ix.code]||'').trim(),nationalId:String(r[ix.nationalId<0?'':ix.nationalId]||'').trim(),name:String(r[ix.name<0?1:ix.name]||'').trim(),subject:String(r[ix.subject<0?'':ix.subject]||'').trim(),quota:String(r[ix.quota<0?'':ix.quota]||'').trim(),phone:String(r[ix.phone<0?'':ix.phone]||'').trim()})).filter(x=>x.name||x.code)}
+async function importTeacherFile(file){
+  try{let rows=[];if(window.XLSX){const wb=XLSX.read(await file.arrayBuffer(),{type:'array'});const ws=wb.Sheets[wb.SheetNames[0]];rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:''})}else{if(!/\\.csv$/i.test(file.name))throw new Error('xlsx');rows=csvRows(await file.text())}
+    const list=mapTeacherRows(rows);if(!list.length){toast('لم أجد أعمدة مفهومة. استخدم: الكود، الرقم القومي، الاسم، المادة، النصاب، التليفون');return}
+    const valid=list.filter(x=>x.name&&x.code),duplicates=valid.filter((x,i)=>valid.findIndex(y=>y.code===x.code)!==i||S.teachers.some(t=>t.code===x.code));
+    modal('<h3>معاينة استيراد المعلمين</h3><p class="note">تم العثور على '+list.length+' صف، الصالح منها '+valid.length+'. سيتم تجاهل الأكواد المكررة أو الصفوف الناقصة.</p><div style="overflow:auto;max-height:45vh"><table class="ptab"><tr><th>الكود</th><th>الاسم</th><th>المادة</th><th>النصاب</th><th>التليفون</th></tr>'+valid.slice(0,30).map(x=>'<tr><td>'+esc(x.code)+'</td><td>'+esc(x.name)+'</td><td>'+esc(x.subject)+'</td><td>'+esc(x.quota)+'</td><td>'+esc(x.phone)+'</td></tr>').join('')+'</table></div><div class="err" id="impErr"></div><div class="acts"><button class="btn g" id="impOk">استيراد وحفظ</button><button class="btn ghost" id="impNo">إلغاء</button></div>');
+    $('#impNo').onclick=closeM;$('#impOk').onclick=()=>{const usedCodes=new Set(S.teachers.map(t=>t.code)),add=valid.filter(x=>{if(!x.code||usedCodes.has(x.code))return false;usedCodes.add(x.code);return true});if(!add.length){$('#impErr').textContent='لا توجد صفوف جديدة صالحة للاستيراد.';return}add.forEach(x=>S.teachers.push({id:uid(),name:x.name,subject:x.subject,quota:x.quota===''?'':(+x.quota||0),code:x.code,nationalId:x.nationalId,phone:x.phone}));save();closeM();go();toast('تم استيراد '+add.length+' مدرس ✓')}
+  }catch(e){toast('تعذر قراءة الملف. تأكد أنه Excel أو CSV صحيح.')}
+}
+function bindTeacherDrop(){const dz=$('#teacherDrop'),fi=$('#teacherFile');if(!dz||!fi)return;dz.onclick=()=>fi.click();fi.onchange=()=>{if(fi.files[0])importTeacherFile(fi.files[0]);fi.value=''};['dragenter','dragover'].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.add('drag')}));['dragleave','drop'].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.remove('drag')}));dz.addEventListener('drop',e=>{const f=e.dataTransfer.files[0];if(f)importTeacherFile(f)})}
 /* ---------- views ---------- */
 function vDashboard(){
   const cf=allConflicts(),totalQuota=S.teachers.reduce((a,t)=>a+(+t.quota||0),0),assigned=S.slots.reduce((a,s)=>a+s.n,0),remaining=Math.max(0,totalQuota-assigned);
@@ -181,7 +197,7 @@ function vPlan(){
    +'<p class="note" style="margin-top:6px">اضغط على أي خانة فاضية لإضافة حصة، أو على حصة موجودة لتعديلها.</p></div>'}
 function vTeachers(){
   const tot=S.teachers.reduce((a,t)=>a+(+t.quota||0),0),us=S.teachers.reduce((a,t)=>a+used(t),0);
-  return'<div class="card"><h3>👩‍🏫 المدرسين ('+S.teachers.length+')</h3><p class="note">إجمالي النصاب '+tot+' · الموزّع '+us+'</p><button class="btn g" data-a="tadd" style="width:100%;margin-top:6px">＋ إضافة مدرّس</button></div>'
+  return'<div class="card"><h3>👩‍🏫 المدرسين ('+S.teachers.length+')</h3><p class="note">إجمالي النصاب '+tot+' · الموزّع '+us+'</p><button class="btn g" data-a="tadd" style="width:100%;margin-top:6px">＋ إضافة مدرّس</button><div class="dropzone" id="teacherDrop" style="margin-top:10px"><b>اسحب ملف المعلمين هنا</b><small>Excel أو CSV · الكود، الرقم القومي، الاسم، المادة، النصاب، التليفون</small><input type="file" id="teacherFile" accept=".xlsx,.xls,.csv,text/csv" hidden></div></div>'
    +S.teachers.map(t=>{const u=used(t),q=+t.quota||0,d=q-u;return'<div class="card item" data-a="tedit" data-id="'+t.id+'"><div><b>'+esc(t.name)+'</b><small>'+esc(t.subject||'من غير مادة')+' · النصاب '+(q||'؟')+'</small></div><span class="pill '+(!q?'warn':d===0?'ok':d<0?'bad':'warn')+'">'+u+(q?' / '+q:'')+'</span></div>'}).join('')}
 function vClasses(){
   return'<div class="card"><h3>🏫 الفصول ('+S.classes.length+')</h3><button class="btn g" data-a="cadd" style="width:100%;margin-top:6px">＋ إضافة فصول</button></div>'
@@ -221,7 +237,7 @@ function go(){
   $('#hs').textContent=[S.school.gov,S.school.admin].filter(Boolean).join(' · ')||'توزيع الحصص على المدرسين';
   const cf=allConflicts().length;$('#warn').hidden=!cf;$('#warn').textContent='⚠️ '+cf+' تعارض';
   document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.tab===UI.tab));
-  $('#main').innerHTML=({dashboard:vDashboard,plan:vPlan,teachers:vTeachers,classes:vClasses,publish:vPublish,print:vPrint,settings:vSettings})[UI.tab]()}
+  $('#main').innerHTML=({dashboard:vDashboard,plan:vPlan,teachers:vTeachers,classes:vClasses,publish:vPublish,print:vPrint,settings:vSettings})[UI.tab]();if(UI.tab==='teachers')bindTeacherDrop()}
 
 /* ---------- dialogs ---------- */
 function slotDlg(sid,day,p){
@@ -255,15 +271,12 @@ function teacherDlg(id){
     if(ex)Object.assign(ex,rec);else S.teachers.push(Object.assign({id:uid()},rec));save();closeM();go()}}
 function classDlg(id){
   const ex=id?cById(id):null;
-  modal((ex?'<h3>تعديل فصل</h3><label>اسم الفصل</label><input id="cN" value="'+esc(ex.name)+'">':'<h3>إضافة فصول</h3><label>اكتب الفصول، بينهم مسافة أو فاصلة</label><input id="cN" placeholder="7/1 7/2 8/1 9/4" style="direction:ltr">')
+  modal((ex?'<h3>تعديل فصل</h3><label>اسم الفصل</label><input id="cN" value="'+esc(ex.name)+'">':'<h3>اختيار فصل</h3><label>اختر الفصل من القائمة</label><select id="cNSelect"><option value="">اختر الفصل</option>'+classSelectOptions('')+'</select>')
    +'<div class="err" id="cE"></div><div class="acts"><button class="btn g" id="cOk">حفظ</button><button class="btn ghost" id="cNo">إلغاء</button></div>'+(ex?'<div class="acts"><button class="btn red" id="cDel">🗑️ حذف الفصل</button></div>':''));
   $('#cNo').onclick=closeM;
   if(ex)$('#cDel').onclick=()=>{if(confirm('هتحذف الفصل وكل حصصه. متأكد؟')){S.classes=S.classes.filter(x=>x.id!==id);S.slots=S.slots.filter(s=>s.c!==id);save();closeM();go()}};
-  $('#cOk').onclick=()=>{const names=ex?[$('#cN').value.trim()]:$('#cN').value.split(/[\s,،]+/).filter(Boolean);
-    if(!names.length||!names[0]){$('#cE').textContent='اكتب اسم الفصل.';return}
-    if(ex){if(S.classes.some(x=>x.name===names[0]&&x.id!==id)){$('#cE').textContent='الاسم مستخدم.';return}ex.name=names[0]}
-    else names.forEach(n=>{if(!S.classes.some(x=>x.name===n))S.classes.push({id:uid(),name:n})});
-    save();closeM();go()}}
+  $('#cOk').onclick=()=>{if(ex){const name=$('#cN').value.trim();if(!name){$('#cE').textContent='اكتب اسم الفصل.';return}if(S.classes.some(x=>x.name===name&&x.id!==id)){$('#cE').textContent='الاسم مستخدم.';return}ex.name=name;save();closeM();go();return}
+    const picked=cById($('#cNSelect').value);if(!picked){$('#cE').textContent='اختر فصلًا من القائمة.';return}save();closeM();go();toast('الفصل '+picked.name+' جاهز للاستخدام ✓')}}
 
 /* ---------- publish / backup ---------- */
 function buildPub(){
