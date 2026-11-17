@@ -16,6 +16,7 @@ header b{font-size:22px;color:#FFE14D;text-shadow:0 2px 0 rgba(0,0,0,.2)}header 
 #warn{background:#fff;color:var(--red);border-radius:12px;padding:6px 10px;font-weight:800;font-size:13px;white-space:nowrap}
 main{max-width:1000px;margin:-14px auto 0;padding:0 10px}
 .card{background:#fff;border-radius:16px;padding:12px;margin:10px 0;box-shadow:0 3px 10px rgba(0,0,0,.08)}
+.dashgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.dashstat{padding:14px;border-radius:14px;background:#F8FAFC;border:1px solid var(--line)}.dashstat b{display:block;font-size:27px;color:var(--g);line-height:1.1}.dashstat small{color:var(--mute)}.dashlist{display:grid;gap:7px}.dashrow{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:9px 10px;background:#F8FAFC;border-radius:10px}.dashrow b{font-size:14px}.dashrow small{color:var(--mute)}
 .c{text-align:center;line-height:1.8}
 .btn{border:0;border-radius:12px;padding:11px 16px;font:inherit;font-weight:800;background:var(--gold);color:#fff;box-shadow:0 3px 0 rgba(0,0,0,.18);cursor:pointer}
 .btn.alt{background:#2563EB}.btn.red{background:var(--red)}.btn.ghost{background:#fff;color:var(--ink);border:1px solid var(--line);box-shadow:none}.btn.g{background:var(--g2)}
@@ -59,6 +60,7 @@ dialog::backdrop{background:rgba(20,40,30,.55)}
 <header><div><b id="hn"></b><small id="hs"></small></div><span><span id="cl" style="font-size:15px;margin-inline-end:6px"></span><span id="warn" hidden></span></span></header>
 <main id="main"></main>
 <nav class="tabs" id="tabs">
+  <button data-tab="dashboard"><i>📊</i>الرئيسية</button>
   <button data-tab="plan"><i>🗓️</i>التوزيع</button>
   <button data-tab="teachers"><i>👩‍🏫</i>المدرسين</button>
   <button data-tab="classes"><i>🏫</i>الفصول</button>
@@ -94,7 +96,7 @@ const persist=()=>{try{localStorage.setItem(LS,JSON.stringify(S))}catch(e){}};
 let pushT=null;
 function markDirty(){if(!cfgOk())return;CFG.dirty=true;saveCfg();cloud();clearTimeout(pushT);pushT=setTimeout(()=>{if(!syncing)pushMaster(false)},2500)}
 const save=()=>{persist();markDirty()};
-let UI={tab:'plan',mode:'t',sh:'m',sel:{t:null,c:null}};
+let UI={tab:'dashboard',mode:'t',sh:'m',sel:{t:null,c:null}};
 
 /* ---------- helpers ---------- */
 const tById=id=>S.teachers.find(t=>t.id===id),cById=id=>S.classes.find(c=>c.id===id);
@@ -125,6 +127,21 @@ const dl=(name,text)=>{const f=new File([text],name,{type:'application/json'});
   const a=document.createElement('a');a.href=URL.createObjectURL(f);a.download=name;document.body.appendChild(a);a.click();a.remove()})()};
 
 /* ---------- views ---------- */
+function vDashboard(){
+  const cf=allConflicts(),totalQuota=S.teachers.reduce((a,t)=>a+(+t.quota||0),0),assigned=S.slots.reduce((a,s)=>a+s.n,0),remaining=Math.max(0,totalQuota-assigned);
+  const workload=S.teachers.map(t=>({t,n:used(t),q:+t.quota||0})).sort((a,b)=>(b.n-b.q)-(a.n-a.q));
+  const attention=workload.filter(x=>x.q&&x.n!==x.q).slice(0,6);
+  const status=cf.length?'<span class="pill bad">'+cf.length+' تعارض يحتاج مراجعة</span>':S.slots.length?'<span class="pill ok">الجدول بلا تعارضات ✓</span>':'<span class="pill warn">لم تتم إضافة حصص بعد</span>';
+  return'<div class="card"><h3>📊 لوحة الإدارة</h3><p class="note">ملخص سريع لحالة الجدول، ويمكنك الانتقال مباشرة إلى الجزء الذي يحتاج تعديلًا.</p><div style="margin-top:8px">'+status+'</div></div>'
+   +'<div class="card"><div class="dashgrid">'
+   +'<div class="dashstat"><b>'+S.teachers.length+'</b><small>مدرس</small></div>'
+   +'<div class="dashstat"><b>'+S.classes.length+'</b><small>فصل</small></div>'
+   +'<div class="dashstat"><b>'+assigned+'</b><small>حصة موزعة</small></div>'
+   +'<div class="dashstat"><b>'+cf.length+'</b><small>تعارض</small></div>'
+   +'</div></div>'
+   +'<div class="card"><h3>📌 متابعة النصاب</h3>'+(attention.length?'<div class="dashlist">'+attention.map(x=>'<div class="dashrow"><div><b>'+esc(x.t.name)+'</b><small> · '+(x.q>x.n?'متبقي '+(x.q-x.n):'زيادة '+(x.n-x.q))+'</small></div><span class="pill '+(x.n>x.q?'bad':'warn')+'">'+x.n+' / '+x.q+'</span></div>').join('')+'</div>':'<p class="note">لا توجد ملاحظات على نصاب المدرسين حاليًا.</p>')+'</div>'
+   +'<div class="card"><h3>⚡ إجراءات سريعة</h3><div class="acts"><button class="btn g" data-a="tab" data-v="teachers">إدارة المدرسين</button><button class="btn alt" data-a="tab" data-v="classes">إدارة الفصول</button><button class="btn" data-a="tab" data-v="plan">فتح الجدول</button><button class="btn ghost" data-a="tab" data-v="publish">النشر</button></div><p class="note" style="margin-top:8px">آخر نسخة منشورة: '+(S.pubVer||'لم يتم النشر بعد')+(CFG.at?' · آخر مزامنة '+esc(CFG.at):'')+'</p></div>'
+   +'<div class="card"><h3>✅ حالة الإعداد</h3><div class="dashlist"><div class="dashrow"><b>مواعيد الحصص</b><span class="pill ok">'+Object.values(S.periods).filter(Array.isArray).length+' فترات</span></div><div class="dashrow"><b>الفصول التي بها حصص</b><span class="pill '+(S.classes.filter(c=>S.slots.some(s=>s.c===c.id)).length===S.classes.length?'ok':'warn')+'">'+S.classes.filter(c=>S.slots.some(s=>s.c===c.id)).length+' / '+S.classes.length+'</span></div><div class="dashrow"><b>المتبقي من النصاب المسجل</b><span class="pill '+(remaining?'warn':'ok')+'">'+remaining+'</span></div></div></div>'}
 function vPlan(){
   if(!S.teachers.length||!S.classes.length)return'<div class="card c"><h3>ابدأ من هنا 👋</h3><p class="note">ضيف المدرسين والفصول الأول، وبعدين وزّع الحصص.</p><div class="acts"><button class="btn g" data-a="tab" data-v="teachers">👩‍🏫 المدرسين ('+S.teachers.length+')</button><button class="btn alt" data-a="tab" data-v="classes">🏫 الفصول ('+S.classes.length+')</button></div></div>';
   const m=UI.mode,list=m==='t'?S.teachers:S.classes;
@@ -171,7 +188,7 @@ function go(){
   $('#hs').textContent=[S.school.gov,S.school.admin].filter(Boolean).join(' · ')||'توزيع الحصص على المدرسين';
   const cf=allConflicts().length;$('#warn').hidden=!cf;$('#warn').textContent='⚠️ '+cf+' تعارض';
   document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.tab===UI.tab));
-  $('#main').innerHTML=({plan:vPlan,teachers:vTeachers,classes:vClasses,publish:vPublish,settings:vSettings})[UI.tab]()}
+  $('#main').innerHTML=({dashboard:vDashboard,plan:vPlan,teachers:vTeachers,classes:vClasses,publish:vPublish,settings:vSettings})[UI.tab]()}
 
 /* ---------- dialogs ---------- */
 function slotDlg(sid,day,p){
