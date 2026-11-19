@@ -653,13 +653,7 @@ const LS='sp1';let S=def();
 try{Object.assign(S,JSON.parse(localStorage.getItem(LS)||'null')||{})}catch(e){}
 function norm(){const d=def();Object.keys(d).forEach(k=>{if(S[k]===undefined)S[k]=d[k]});['m','x','e'].forEach(k=>{if(!Array.isArray(S.periods[k]))S.periods[k]=d.periods[k];if(!S.brk[k])S.brk[k]={s:'',e:''}});if(!S.printCfg||typeof S.printCfg!=='object')S.printCfg=d.printCfg;else Object.keys(d.printCfg).forEach(k=>{if(S.printCfg[k]===undefined)S.printCfg[k]=d.printCfg[k]});if(!S.budget||typeof S.budget!=='object')S.budget=d.budget;if(!S.budget.counts)S.budget.counts=d.budget.counts}
 norm();
-if(!localStorage.getItem('sp1_clean120')){
-  if(S.classes.length>=100){
-    S.classes=S.classes.filter(c=>S.slots.some(s=>s.c===c.id));
-    persist();
-  }
-  localStorage.setItem('sp1_clean120','1');
-}
+
 
 const classIsNumbered=n=>{const p=String(n).split('/').map(Number);return p.length===2&&p[0]>=1&&p[0]<=6&&p[1]>=1};
 const classSelectOptions=(selected,filterTxt='')=>{
@@ -731,7 +725,13 @@ const cfgOk=()=>!!(CFG.token&&CFG.m.repo);
 const printStamp=()=>{const n=new Date();const d=n.toLocaleDateString('ar-EG',{weekday:'long',year:'numeric',month:'numeric',day:'numeric'});const t=n.toLocaleTimeString('ar-EG',{hour:'2-digit',minute:'2-digit'});return d+' · الساعة '+t};
 const nowTxt=()=>{const n=new Date();return n.toISOString().slice(0,10)+' '+pad2(n.getHours())+':'+pad2(n.getMinutes())};
 const persist=()=>{try{localStorage.setItem(LS,JSON.stringify(S))}catch(e){} };
-let pushT=null;
+let pushT=null;if(!localStorage.getItem('sp1_clean120')){
+  if(S.classes.length>=100){
+    S.classes=S.classes.filter(c=>S.slots.some(s=>s.c===c.id));
+    persist();
+  }
+  localStorage.setItem('sp1_clean120','1');
+}
 function markDirty(){if(!cfgOk())return;CFG.dirty=true;saveCfg();cloud();clearTimeout(pushT);pushT=setTimeout(()=>{if(!syncing)pushMaster(false)},2500)}
 const save=()=>{persist();markDirty()};
 
@@ -1491,7 +1491,7 @@ function go(){
   $('#shn').textContent=title;$('#shs').textContent=sub;
   const cf=allConflicts().length;$('#warn').hidden=!cf;$('#warn').textContent='⚠️ '+cf+' تعارض';
   document.querySelectorAll('#tabs button[data-tab]').forEach(b=>b.classList.toggle('on',b.dataset.tab===UI.tab));
-  $('#main').innerHTML=({dashboard:vDashboard,plan:vPlan,subs:vSubs,teachers:vTeachers,classes:vClasses,budget:vBudget,publish:vPublish,print:vPrint,backup:vBackup,settings:vSettings})[UI.tab]();
+  try{$('#main').innerHTML=({dashboard:vDashboard,plan:vPlan,subs:vSubs,teachers:vTeachers,classes:vClasses,budget:vBudget,publish:vPublish,print:vPrint,backup:vBackup,settings:vSettings})[UI.tab]()}catch(err){$('#main').innerHTML='<div class="card"><h3>حدث خطأ في العرض</h3><p class="note">'+esc(err&&err.message||err)+'</p></div>'}
   if(UI.tab==='teachers')bindTeacherDrop();
   if(UI.tab==='backup')bindBackupDrop();
   updUndoBtns();
