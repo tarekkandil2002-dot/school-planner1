@@ -395,6 +395,25 @@ dialog::backdrop{background:rgba(15,23,42,.38);backdrop-filter:blur(6px)}
 }
 .t-row-acts{display:flex;align-items:center;gap:6px}
 
+
+.floor-grid{display:grid;gap:10px;margin-top:10px}
+.floor-band{background:var(--glass-soft);border:1px solid var(--glass-bd);border-radius:14px;padding:10px 12px}
+.floor-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-size:13.5px;font-weight:800;color:var(--g-ink)}
+.floor-cells{display:grid;grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:8px}
+.f-room{background:var(--card);border:1.5px solid var(--sc-bd,var(--line));border-top:3.5px solid var(--sc-bd,var(--g2));border-radius:11px;padding:8px 10px;font-size:12.5px}
+.f-room.free{opacity:.72;border-style:dashed}
+.f-room b{display:block;font-size:13px;color:var(--ink)}
+.f-room small{display:block;font-size:11.5px;color:var(--mute);margin-top:2px}
+
+
+.fly-pill{background:rgba(245,158,11,.16);color:var(--warn-ink);border:1px solid rgba(245,158,11,.35);border-radius:999px;padding:2px 8px;font-size:11px;font-weight:800}
+.fly-pair-0{background:#FEF08A!important;color:#422006!important}
+.fly-pair-1{background:#FED7AA!important;color:#431407!important}
+.fly-pair-2{background:#FBCFE8!important;color:#500724!important}
+.fly-tbl{width:100%;border-collapse:collapse;font-size:12px}
+.fly-tbl th,.fly-tbl td{border:1px solid #94A3B8;padding:6px 5px;text-align:center}
+.fly-tbl th{background:#1B4353;color:#fff;font-weight:800}
+
 /* Pastel Subject Cards (Live Grid + Premium Print Layout) */
 .grid td.c{
   padding:4px 5px;border-radius:11px;
@@ -624,6 +643,7 @@ nav.tabs .side-foot{gap:5px}
   <div class="top-tools">
     <button class="icon-btn" id="btnUndo" title="تراجع (Ctrl+Z)" disabled>↩️<span>تراجع</span></button>
     <button class="icon-btn" id="btnRedo" title="إعادة (Ctrl+Y)" disabled>↪️</button>
+    <button class="icon-btn" id="btnShot" title="تصوير الشاشة (سكرين شوت)">📸<span>تصوير</span></button>
     <button class="icon-btn" id="btnVoice" title="أوامر صوتية بالعربي">🎙️</button>
     <button class="icon-btn" id="btnTheme" title="تبديل الوضع الليلي">🌙</button>
     <span id="cl"></span>
@@ -681,7 +701,7 @@ const SI={m:'☀️',x:'🌤️',e:'🌙'},SHN={m:'صباحي',x:'ممتد',e:'�
 const PAL=['#0D9488','#2563EB','#6366F1','#D97706','#059669','#E11D48','#0284C7','#7C3AED'];
 const PFG=['#fff','#fff','#fff','#fff','#fff','#fff','#fff','#fff'];
 const mkP=(a,len,gap)=>Array.from({length:9},(_,i)=>{const s=a+i*gap;return{s:fm(s),e:fm(s+len)}});
-const def=()=>({v:1,pubVer:0,base:'',subjectLogos:{},school:{gov:'',admin:'',name:''},periods:{m:mkP(480,40,45),x:mkP(420,50,60),e:mkP(810,40,45)},brk:{m:{s:'',e:''},x:{s:'',e:''},e:{s:'',e:''}},teachers:[],classes:[],rooms:[],slots:[],subs:[],absents:{},printCfg:{sh:'m',layout:'4',font:100,rowH:21,margin:6,colors:true},budget:{stage:'prim',counts:{1:0,2:0,3:0,4:0,5:0,6:0}},supervision:[],supAreas:['الطابور الصباحي','الفناء والفسحة','الدور الأول','الدور الثاني','الدور الثالث','الدور الرابع','الدور الخامس','البوابة']});
+const def=()=>({v:1,pubVer:0,base:'',subjectLogos:{},school:{gov:'',admin:'',name:''},periods:{m:mkP(480,40,45),x:mkP(420,50,60),e:mkP(810,40,45)},brk:{m:{s:'',e:''},x:{s:'',e:''},e:{s:'',e:''}},teachers:[],classes:[],rooms:[],slots:[],subs:[],absents:{},printCfg:{sh:'m',layout:'4',font:100,rowH:21,margin:6,colors:true},budget:{stage:'prim',counts:{1:0,2:0,3:0,4:0,5:0,6:0}},supervision:[],supAreas:['الطابور الصباحي','الفناء والفسحة','الدور الأول','الدور الثاني','الدور الثالث','الدور الرابع','الدور الخامس','البوابة'],buildings:[{id:'main',name:'المبنى الأساسي',floors:5},{id:'sub',name:'المبنى الفرعي',floors:5}]});
 const LS='sp1';let S=def();
 try{Object.assign(S,JSON.parse(localStorage.getItem(LS)||'null')||{})}catch(e){}
 function norm(){const d=def();Object.keys(d).forEach(k=>{if(S[k]===undefined)S[k]=d[k]});['m','x','e'].forEach(k=>{if(!Array.isArray(S.periods[k]))S.periods[k]=d.periods[k];if(!S.brk[k])S.brk[k]={s:'',e:''}});if(!S.printCfg||typeof S.printCfg!=='object')S.printCfg=d.printCfg;else Object.keys(d.printCfg).forEach(k=>{if(S.printCfg[k]===undefined)S.printCfg[k]=d.printCfg[k]});if(!S.budget||typeof S.budget!=='object')S.budget=d.budget;if(!S.budget.counts)S.budget.counts=d.budget.counts;if(!Array.isArray(S.supervision))S.supervision=[];if(!Array.isArray(S.supAreas)||!S.supAreas.length)S.supAreas=d.supAreas}
@@ -775,7 +795,7 @@ let UI={
   tQ:'',tF:'all', // teachers search & filter: all|ok|under|over
   cQ:'',cG:'all',cUsedOnly:false, // classes search, grade filter, active only
   printSh:'m',printLayout:'4', // print shift: m|x|e|all, layout: 1|4
-  subDate:new Date().toISOString().slice(0,10),subSh:'m',supSh:'m',moveMode:false,moveSrc:null,followDay:6,openSubs:{}
+  subDate:new Date().toISOString().slice(0,10),subSh:'m',supSh:'m',moveMode:false,moveSrc:null,followDay:6,openSubs:{},mapDay:null,mapSh:'m',mapP:null,mapBld:'all',mapQ:''
 };
 
 /* ---------- helpers ---------- */
@@ -878,49 +898,210 @@ const dl=(name,text)=>{const f=new File([text],name,{type:'application/json'});
 
 function normHeader(v){return String(v||'').toLowerCase().replace(/[\s_\-]/g,'').replace(/[إأآ]/g,'ا')}
 function csvRows(text){const rows=[];let row=[],cell='',quote=false;for(let i=0;i<text.length;i++){const ch=text[i],nx=text[i+1];if(ch==='"'&&quote&&nx==='"'){cell+='"';i++;continue}if(ch==='"'){quote=!quote;continue}if(ch===','&&!quote){row.push(cell.trim());cell='';continue}if((ch==='\n'||ch==='\r')&&!quote){if(ch==='\r'&&nx==='\n')i++;row.push(cell.trim());if(row.some(Boolean))rows.push(row);row=[];cell='';continue}cell+=ch}if(cell||row.length){row.push(cell.trim());rows.push(row)}return rows}
-function mapTeacherRows(rows){
-  if(!rows.length)return[];
-  const headers=rows[0].map(normHeader);
-  const find=names=>{const i=headers.findIndex(h=>names.some(n=>h.includes(n)));return i<0?-1:i};
-  const ix={
-    code:find(['الكود','code','كود']),
-    nationalId:find(['الرقمالقومي','nationalid','national']),
-    name:find(['اسمالمعلم','اسمالمدرس','الاسم','اسم','معلم','مدرس','name']),
-    subject:find(['المادة','الماده','التخصص','تخصص','مادة','ماده','subject']),
-    quota:find(['النصاب','الحصص','quota']),
-    phone:find(['التليفون','الهاتف','الموبايل','الجوال','رقمالهاتف','phone','mobile'])
-  };
-  let start=1;
-  if(ix.name<0&&ix.code<0){
-    // Fallback: sheet without standard headers — treat column 0 (or first text column) as teacher name
-    ix.name=0;start=0;
+
+async function readXlsxOffline(buf){
+  const u8=new Uint8Array(buf),dv=new DataView(buf),dec=new TextDecoder('utf-8');
+  let eocd=-1;
+  for(let i=u8.length-22;i>=Math.max(0,u8.length-65557);i--){if(dv.getUint32(i,true)===0x06054b50){eocd=i;break}}
+  if(eocd<0)throw new Error('not zip');
+  const cdOffset=dv.getUint32(eocd+16,true),cdEntries=dv.getUint16(eocd+10,true);
+  const files={};let p=cdOffset;
+  for(let i=0;i<cdEntries;i++){
+    if(dv.getUint32(p,true)!==0x02014b50)break;
+    const comp=dv.getUint16(p+10,true),csize=dv.getUint32(p+20,true);
+    const fnLen=dv.getUint16(p+28,true),exLen=dv.getUint16(p+30,true),cmLen=dv.getUint16(p+32,true);
+    const lfhOff=dv.getUint32(p+42,true);
+    const name=dec.decode(u8.subarray(p+46,p+46+fnLen));
+    p+=46+fnLen+exLen+cmLen;
+    if(name==='xl/sharedStrings.xml'||/^xl\/worksheets\/sheet\d+\.xml$/.test(name)){
+      const lfn=dv.getUint16(lfhOff+26,true),lex=dv.getUint16(lfhOff+28,true);
+      const slice=u8.subarray(lfhOff+30+lfn+lex,lfhOff+30+lfn+lex+csize);
+      if(comp===0)files[name]=dec.decode(slice);
+      else if(comp===8&&typeof DecompressionStream!=='undefined'){
+        const ds=new DecompressionStream('deflate-raw'),w=ds.writable.getWriter();
+        w.write(slice);w.close();
+        files[name]=dec.decode(await new Response(ds.readable).arrayBuffer());
+      }
+    }
   }
-  return rows.slice(start).map(r=>({
+  const unesc=s=>s.replace(/&#x([0-9a-fA-F]+);/g,(_,h)=>String.fromCodePoint(parseInt(h,16)))
+    .replace(/&#(\d+);/g,(_,d)=>String.fromCodePoint(+d))
+    .replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&#39;/g,"'");
+  const ss=[];
+  if(files['xl/sharedStrings.xml']){
+    for(const si of (files['xl/sharedStrings.xml'].match(/<si\b[^>]*>[\s\S]*?<\/si>/g)||[])){
+      ss.push([...si.matchAll(/<t\b[^>]*>([\s\S]*?)<\/t>/g)].map(m=>unesc(m[1])).join(''));
+    }
+  }
+  const sheetKeys=Object.keys(files).filter(k=>k.startsWith('xl/worksheets/sheet')).sort();
+  if(!sheetKeys.length)throw new Error('no sheet');
+  for(const sk of sheetKeys){
+    const xml=files[sk];
+    const colIdx=ref=>{const l=(ref||'').replace(/[0-9]/g,'');let n=0;for(let i=0;i<l.length;i++)n=n*26+(l.charCodeAt(i)-64);return Math.max(0,n-1)};
+    const rows=[];
+    for(const rXml of (xml.match(/<row\b[^>]*>[\s\S]*?<\/row>/g)||[])){
+      const row=[];
+      for(const cXml of (rXml.match(/<c\b[^>]*>[\s\S]*?<\/c>/g)||[])){
+        const refM=cXml.match(/\br="([^"]+)"/),tM=cXml.match(/\bt="([^"]+)"/),c=colIdx(refM?refM[1]:'A1');
+        let val='';
+        if(tM&&tM[1]==='inlineStr')val=[...cXml.matchAll(/<t\b[^>]*>([\s\S]*?)<\/t>/g)].map(m=>unesc(m[1])).join('');
+        else{const vM=cXml.match(/<v>([\s\S]*?)<\/v>/);if(vM){val=unesc(vM[1]);if(tM&&tM[1]==='s')val=ss[+val]||''}}
+        row[c]=val;
+      }
+      if(row.some(x=>String(x||'').trim()!==''))rows.push(row);
+    }
+    if(rows.length)return rows;
+  }
+  return[];
+}
+function readXlsTextFallback(txt){
+  if(/<table\b/i.test(txt)||/<Row\b/i.test(txt)){
+    const doc=new DOMParser().parseFromString(txt,'text/html');
+    const trs=[...doc.querySelectorAll('tr,row')];
+    const rows=trs.map(tr=>[...tr.children].map(td=>td.textContent.trim())).filter(r=>r.some(Boolean));
+    if(rows.length)return rows;
+  }
+  return csvRows(txt.replace(/^\uFEFF/,''));
+}
+
+function detectTeacherSheet(rows){
+  if(!rows||!rows.length)return{hdrIdx:-1,ix:{code:-1,nationalId:-1,name:-1,subject:-1,quota:-1,phone:-1},list:[]};
+  const cleanRows=rows.filter(r=>Array.isArray(r)&&r.some(c=>String(c||'').trim()!==''));
+  if(!cleanRows.length)return{hdrIdx:-1,ix:{code:-1,nationalId:-1,name:-1,subject:-1,quota:-1,phone:-1},list:[]};
+
+  let hdrIdx=-1,ix={code:-1,nationalId:-1,name:-1,subject:-1,quota:-1,phone:-1};
+  const limit=Math.min(12,cleanRows.length);
+  for(let r=0;r<limit;r++){
+    const hs=cleanRows[r].map(normHeader);
+    const find=names=>hs.findIndex(h=>h&&!h.includes('مدرسه')&&!h.includes('مدرسة')&&names.some(n=>h===n||h.includes(n)));
+    const nIdx=find(['اسمالمعلم','اسمالمدرس','اسمالموظف','الاسمرباعي','الاسمثلاثي','الاسم','name','teacher']);
+    const sIdx=find(['مادهالتدريس','مادةالتدريس','المادةالدراسية','المادهالدراسيه','الماده','المادة','التخصص','تخصص','ماده','مادة','الوظيفة','الوظيفه','القسم','subject']);
+    const cIdx=find(['الكود','كودالمعلم','كود','code']);
+    if(nIdx>=0||(sIdx>=0&&cIdx>=0)){
+      hdrIdx=r;
+      ix={
+        code:cIdx,
+        nationalId:find(['الرقمالقومي','رقمالقومي','nationalid','national']),
+        name:nIdx,
+        subject:sIdx,
+        quota:find(['النصاب','الحصص','quota']),
+        phone:find(['التليفون','تليفون','الهاتف','هاتف','الموبايل','موبايل','الجوال','واتس','phone','mobile'])
+      };
+      break;
+    }
+  }
+
+  if(ix.subject<0){
+    const maxCols=Math.max(...cleanRows.map(r=>r.length));
+    let bestSub=-1,bestSubScore=0;
+    for(let col=0;col<maxCols;col++){
+      if(col===ix.name)continue;
+      let sc=0;
+      for(let r=(hdrIdx>=0?hdrIdx+1:0);r<cleanRows.length;r++){
+        const v=normAr(cleanRows[r][col]||'');
+        if(v&&/(عرب|رياض|انجل|علوم|دراسات|دين|رسم|موسيق|توكاتس|تكنولوج|حاسب|فنيه|بدنيه|مهارات|قيم|english|math)/.test(v))sc++;
+      }
+      if(sc>bestSubScore){bestSubScore=sc;bestSub=col}
+    }
+    if(bestSubScore>=1)ix.subject=bestSub;
+  }
+  if(ix.name<0){
+    const maxCols=Math.max(...cleanRows.map(r=>r.length));
+    let bestCol=0,bestScore=-1;
+    for(let col=0;col<maxCols;col++){
+      let score=0;
+      for(let r=(hdrIdx>=0?hdrIdx+1:0);r<cleanRows.length;r++){
+        const v=String(cleanRows[r][col]||'').trim();
+        if(v&&!/^[0-9٠-٩.,\s-]+$/.test(v)&&v.length>=3)score++;
+      }
+      if(score>bestScore){bestScore=score;bestCol=col}
+    }
+    ix.name=bestCol;
+  }
+
+  const start=hdrIdx>=0?hdrIdx+1:0;
+  const list=cleanRows.slice(start).map(r=>({
+    raw:r,
     code:ix.code<0?'':String(r[ix.code]||'').trim(),
     nationalId:ix.nationalId<0?'':String(r[ix.nationalId]||'').trim(),
     name:ix.name<0?'':String(r[ix.name]||'').trim(),
     subject:ix.subject<0?'':String(r[ix.subject]||'').trim(),
     quota:ix.quota<0?'':String(r[ix.quota]||'').trim(),
     phone:ix.phone<0?'':String(r[ix.phone]||'').trim()
-  })).filter(x=>x.name);
+  })).filter(x=>x.name&&!/^(الاسم|اسم المعلم|اسم المدرس|م|الإجمالي|المجموع)$/i.test(x.name)&&!/^[0-9٠-٩]+$/.test(x.name));
+
+  return{hdrIdx,ix,cleanRows,list};
 }
+function mapTeacherRows(rows){return detectTeacherSheet(rows).list}
 async function importTeacherFile(file){
   try{
     let rows=[];
+    const buf=await file.arrayBuffer();
     if(window.XLSX){
-      const wb=XLSX.read(await file.arrayBuffer(),{type:'array'});
-      const ws=wb.Sheets[wb.SheetNames[0]];
-      rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+      const wb=XLSX.read(buf,{type:'array'});
+      for(const sn of wb.SheetNames){
+        const r=XLSX.utils.sheet_to_json(wb.Sheets[sn],{header:1,defval:''});
+        if(r&&r.some(x=>Array.isArray(x)&&x.some(c=>String(c||'').trim()!==''))){rows=r;break}
+      }
+    }else if(/\.xlsx$/i.test(file.name)){
+      rows=await readXlsxOffline(buf);
     }else{
-      if(!/\.csv$/i.test(file.name)){toast('في وضع الأوفلاين احفظ الشيت بصيغة CSV من Excel ثم اسحبه هنا.');return}
-      rows=csvRows(await file.text());
+      const txt=new TextDecoder('utf-8').decode(buf);
+      if(/\.xls$/i.test(file.name)&&!/<table|<Row|<Workbook/i.test(txt)){
+        toast('ملف .xls القديم الثنائي يحتاج حفظه كـ .xlsx أو CSV من Excel ليُقرأ بدون إنترنت.');return;
+      }
+      rows=readXlsTextFallback(txt);
     }
-    const list=mapTeacherRows(rows);
-    if(!list.length){toast('لم أجد أسماء مدرسين في الملف.');return}
-    const valid=list.filter(x=>x.name);
-    modal('<h3>معاينة استيراد المعلمين</h3><p class="note">تم العثور على <b>'+valid.length+'</b> مدرّس. أي بيانات ناقصة (مثل الكود أو التليفون أو المادة) سيتم استيراد المدرّس بدونها ويمكنك تعديلها لاحقًا.</p><div style="overflow:auto;max-height:45vh"><table class="ptab"><tr><th>الاسم</th><th>المادة</th><th>النصاب</th><th>التليفون</th><th>الكود</th></tr>'+valid.slice(0,40).map(x=>'<tr><td>'+esc(x.name)+'</td><td>'+esc(x.subject||'—')+'</td><td>'+esc(x.quota||'—')+'</td><td>'+esc(x.phone||'—')+'</td><td>'+esc(x.code||'تلقائي')+'</td></tr>').join('')+'</table></div><div class="err" id="impErr"></div><div class="acts"><button class="btn g" id="impOk">استيراد وحفظ ('+valid.length+')</button><button class="btn ghost" id="impNo">إلغاء</button></div>');
+    const det=detectTeacherSheet(rows);
+    if(!det.cleanRows||!det.cleanRows.length){toast('الملف فارغ أو لا يحتوي على صفوف مقروءة.');return}
+
+    const maxCols=Math.max(...det.cleanRows.map(r=>r.length));
+    const hdrRow=det.hdrIdx>=0?det.cleanRows[det.hdrIdx]:det.cleanRows[0];
+    let curNameCol=Math.max(0,det.ix.name);
+    let curSubCol=det.ix.subject;
+
+    const buildFromCol=(col,subCol)=>{
+      const start=det.hdrIdx>=0?det.hdrIdx+1:0;
+      return det.cleanRows.slice(start).map(r=>({
+        code:det.ix.code<0?'':String(r[det.ix.code]||'').trim(),
+        nationalId:det.ix.nationalId<0?'':String(r[det.ix.nationalId]||'').trim(),
+        name:String(r[col]||'').trim(),
+        subject:subCol<0?'':String(r[subCol]||'').trim(),
+        quota:det.ix.quota<0?'':String(r[det.ix.quota]||'').trim(),
+        phone:det.ix.phone<0?'':String(r[det.ix.phone]||'').trim()
+      })).filter(x=>x.name&&!/^(الاسم|اسم المعلم|اسم المدرس|م|الإجمالي|المجموع)$/i.test(x.name)&&!/^[0-9٠-٩]+$/.test(x.name));
+    };
+
+    const mkColOpts=sel=>Array.from({length:maxCols},(_,i)=>{
+      const sample=String((hdrRow&&hdrRow[i])||'').trim()||('عمود '+(i+1));
+      return'<option value="'+i+'"'+(i===sel?' selected':'')+'>عمود '+(i+1)+': '+esc(sample.slice(0,22))+'</option>';
+    }).join('');
+
+    modal('<h3>معاينة استيراد المعلمين</h3>'
+     +'<div class="row">'
+     +'<div><label>عمود «اسم المدرّس»</label><select id="impColSel">'+mkColOpts(curNameCol)+'</select></div>'
+     +'<div><label>عمود «مادة التدريس»</label><select id="impSubSel"><option value="-1">— بدون عمود مادة —</option>'+mkColOpts(curSubCol)+'</select></div>'
+     +'</div>'
+     +'<p class="note" id="impSummary" style="margin-top:6px"></p>'
+     +'<div id="impPreview" style="overflow:auto;max-height:42vh;margin-top:6px"></div>'
+     +'<div class="err" id="impErr"></div>'
+     +'<div class="acts"><button class="btn g" id="impOk">استيراد وحفظ</button><button class="btn ghost" id="impNo">إلغاء</button></div>');
+
+    let valid=[];
+    const renderPrev=()=>{
+      valid=buildFromCol(curNameCol,curSubCol);
+      $('#impSummary').innerHTML='تم العثور على <b>'+valid.length+'</b> مدرّس. (الخانات الناقصة بتتساب فاضية وتقدر تعدّلها بعدين)';
+      $('#impOk').textContent='استيراد وحفظ ('+valid.length+')';
+      $('#impPreview').innerHTML=valid.length
+        ?'<table class="ptab"><tr><th>الاسم</th><th>مادة التدريس</th><th>النصاب</th><th>التليفون</th></tr>'+valid.slice(0,40).map(x=>'<tr><td>'+esc(x.name)+'</td><td>'+esc(x.subject||'—')+'</td><td>'+esc(x.quota||'—')+'</td><td>'+esc(x.phone||'—')+'</td></tr>').join('')+'</table>'
+        :'<p class="note" style="color:var(--red)">لا توجد أسماء في هذا العمود — اختر عمودًا آخر من القائمة بالأعلى.</p>';
+    };
+    renderPrev();
+    $('#impColSel').onchange=()=>{curNameCol=+$('#impColSel').value;renderPrev()};
+    $('#impSubSel').onchange=()=>{curSubCol=+$('#impSubSel').value;renderPrev()};
     $('#impNo').onclick=closeM;
     $('#impOk').onclick=()=>{
+      if(!valid.length){$('#impErr').textContent='اختر عمودًا يحتوي على أسماء أولًا.';return}
       const usedCodes=new Set(S.teachers.map(t=>t.code));
       const usedNames=new Set(S.teachers.map(t=>normAr(t.name)));
       const add=[];
@@ -971,6 +1152,145 @@ function breakAfterPeriod(sh){
 }
 
 /* ---------- views ---------- */
+
+const FLOORS=[['5','الدور الخامس'],['4','الدور الرابع'],['3','الدور الثالث'],['2','الدور الثاني'],['1','الدور الأول'],['0','الدور الأرضي']];
+const FLOOR_NAMES=['الدور الأرضي','الدور الأول','الدور الثاني','الدور الثالث','الدور الرابع','الدور الخامس','الدور السادس','الدور السابع','الدور الثامن','الدور التاسع','الدور العاشر'];
+const getBlds=()=>Array.isArray(S.buildings)&&S.buildings.length?S.buildings:[{id:'main',name:'المبنى الأساسي',floors:5},{id:'sub',name:'المبنى الفرعي',floors:5}];
+const floorsForBld=bid=>{const b=getBlds().find(x=>x.id===bid);const n=Math.max(1,Math.min(10,+(b&&b.floors)||5));const out=[];for(let i=n;i>=0;i--)out.push([String(i),FLOOR_NAMES[i]||('الدور '+i)]);return out};
+function detectNowPeriod(sh){
+  const n=new Date(),m=n.getHours()*60+n.getMinutes(),P=S.periods[sh]||[];
+  for(let i=0;i<P.length;i++){if(m>=mins(P[i].s)&&m<=mins(P[i].e))return i+1}
+  // If between periods, pick the upcoming or most recent period
+  for(let i=0;i<P.length;i++){if(m<mins(P[i].s))return i+1}
+  return P.length||1;
+}
+function isBreakNow(sh){
+  const b=S.brk&&S.brk[sh];if(!b||!b.s||!b.e)return false;
+  const n=new Date(),m=n.getHours()*60+n.getMinutes();
+  return m>=mins(b.s)&&m<=mins(b.e);
+}
+function renderFloorMapBody(){
+  const today=new Date().getDay();
+  const day=UI.mapDay!=null?UI.mapDay:(today===5?6:today);
+  const sh=UI.mapSh||'m';
+  const P=S.periods[sh]||[];
+  const p=UI.mapP!=null?UI.mapP:detectNowPeriod(sh);
+  const todayIso=new Date().toISOString().slice(0,10);
+  const absSet=new Set((S.absents&&S.absents[todayIso])||[]);
+  const q=normAr(UI.mapQ);
+  const bldFilter=UI.mapBld||'all';
+
+  if(!S.classes.length)return'<p class="note" style="margin-top:10px">أضف الفصول أولًا من «إحصائية الفصول» وحدد المبنى والدور لكل فصل لتظهر الخريطة هنا.</p>';
+
+  const blds=getBlds();const bldsToShow=bldFilter==='all'?[...blds.map(b=>[b.id,'🏛️ '+b.name]),['none','🏫 فصول لم يُحدد مبناها']]:blds.filter(b=>b.id===bldFilter).map(b=>[b.id,'🏛️ '+b.name]);
+
+  const htmlParts=bldsToShow.map(([bk,bLabel])=>{
+    const bClasses=S.classes.filter(c=>{
+      const loc=getClassLocForDay(c,day);
+      if(bk==='none')return !loc.bld;
+      return loc.bld===bk;
+    });
+    if(!bClasses.length)return'';
+
+    const bFloors=floorsForBld(bk);
+    const groups=new Map();
+    bFloors.forEach(([k])=>groups.set(k,[]));
+    groups.set('none',[]);
+    bClasses.forEach(c=>{
+      const loc=getClassLocForDay(c,day);
+      const f=String(loc.floor||'');
+      if(groups.has(f))groups.get(f).push(c);
+      else groups.get('none').push(c);
+    });
+
+    const bands=[...groups.entries()].filter(([_,list])=>list.length>0).map(([fk,list])=>{
+      const fObj=bFloors.find(x=>x[0]===fk)||FLOORS.find(x=>x[0]===fk);
+      const fName=fObj?fObj[1]:'دور غير محدد';
+      const cells=list.map(c=>{
+        const s=S.slots.find(x=>x.sh===sh&&x.day===day&&x.c===c.id&&x.p<=p&&p<x.p+x.n);
+        const subRec=s&&absSet.has(s.t)?(S.subs||[]).find(x=>x.date===todayIso&&x.slotId===s.id):null;
+        const teacherTxt=s?(subRec&&subRec.coverId?('بديل: '+tName(subRec.coverId)):(absSet.has(s.t)?'⚠️ غائب ('+tName(s.t)+')':tName(s.t))):'';
+        const hay=normAr([c.name,bLabel,fName,s&&s.sub,teacherTxt,s&&s.r?rName(s.r):''].filter(Boolean).join(' '));
+        if(q&&!hay.includes(q))return'';
+        if(!s)return'<div class="f-room free"><b>فصل '+esc(c.name)+'</b><small>لا توجد حصة الآن</small></div>';
+        const th=subjectTheme(s.sub);
+        return'<div class="f-room" style="--sc-bd:'+th.bd+'"><b>فصل '+esc(c.name)+(isFlyingClass(c)?' ✈️':'')+' · '+esc(s.sub||'حصة')+'</b><small>👨‍🏫 '+esc(teacherTxt)+(s.r?' · '+esc(rName(s.r)):'')+'</small></div>';
+      }).filter(Boolean).join('');
+      if(!cells)return'';
+      return'<div class="floor-band"><div class="floor-hdr"><span>'+fName+'</span><span class="pill ok">'+list.length+' فصل</span></div><div class="floor-cells">'+cells+'</div></div>';
+    }).filter(Boolean).join('');
+
+    if(!bands)return'';
+    return'<div style="margin-top:12px"><h4 style="margin:4px 0 8px">'+bLabel+'</h4><div class="floor-grid">'+bands+'</div></div>';
+  }).filter(Boolean).join('');
+
+  return htmlParts||'<p class="note" style="margin-top:10px">لا توجد نتائج مطابقة للبحث في هذا المبنى أو الحصة.</p>';
+}
+
+function buildingsDlg(){
+  if(!Array.isArray(S.buildings))S.buildings=def().buildings;
+  const render=()=>{
+    const listHTML=S.buildings.length
+      ?S.buildings.map(b=>'<div class="dashrow" style="margin-top:6px;flex-wrap:wrap"><input data-bedit="'+b.id+'" value="'+esc(b.name)+'" style="flex:2;min-width:140px;padding:6px 10px" placeholder="اسم المبنى"><div style="display:flex;align-items:center;gap:5px"><small class="note">طوابق:</small><input type="number" min="1" max="10" data-bfl="'+b.id+'" value="'+(+b.floors||5)+'" style="width:62px;padding:6px;text-align:center"></div>'+(S.buildings.length>1?'<button class="btn red sm" data-bdel="'+b.id+'">🗑️</button>':'')+'</div>').join('')
+      :'<p class="note">لا توجد مبانٍ مضافة.</p>';
+    modal('<h3>🏛️ إدارة المباني والطوابق</h3><p class="note">أضف أي مبنى وحدد عدد طوابقه (أدواره) ليناسب أي مدرسة، أو عدّل أو احذف أي مبنى.</p>'
+     +'<div id="bldsList">'+listHTML+'</div>'
+     +'<div class="row" style="margin-top:12px;align-items:end"><div style="flex:2"><label>اسم مبنى جديد</label><input id="newBldName" placeholder="مثال: المبنى الإداري أو مبنى KG"></div><div><label>عدد الطوابق</label><input id="newBldFloors" type="number" min="1" max="10" value="3"></div><div><button class="btn g" id="addBldBtn" style="width:100%">＋ إضافة مبنى</button></div></div>'
+     +'<div class="acts"><button class="btn ghost" id="bldsClose">إغلاق</button></div>');
+    $('#bldsClose').onclick=()=>{closeM();go()};
+    $('#addBldBtn').onclick=()=>{
+      const nm=$('#newBldName').value.trim(),fl=Math.max(1,Math.min(10,+$('#newBldFloors').value||5));
+      if(!nm){toast('اكتب اسم المبنى أولًا.');return}
+      pushUndo('إضافة مبنى');S.buildings.push({id:uid(),name:nm,floors:fl});save();render();toast('✓ تمت إضافة '+nm+' ('+fl+' طوابق)');
+    };
+    document.querySelectorAll('[data-bedit]').forEach(inp=>{
+      inp.onchange=()=>{const b=S.buildings.find(x=>x.id===inp.dataset.bedit);if(b&&inp.value.trim()){pushUndo('تعديل اسم مبنى');b.name=inp.value.trim();save();toast('تم التعديل ✓')}};
+    });
+    document.querySelectorAll('[data-bfl]').forEach(inp=>{
+      inp.onchange=()=>{const b=S.buildings.find(x=>x.id===inp.dataset.bfl);if(b){pushUndo('تعديل عدد الطوابق');b.floors=Math.max(1,Math.min(10,+inp.value||5));inp.value=b.floors;save();toast('تم تحديث طوابق '+b.name+' ✓')}};
+    });
+    document.querySelectorAll('[data-bdel]').forEach(btn=>{
+      btn.onclick=()=>{
+        const bid=btn.dataset.bdel,b=S.buildings.find(x=>x.id===bid);
+        if(!b||!confirm('هل تريد حذف «'+b.name+'»؟ (ستبقى الفصول كما هي بدون مبنى)'))return;
+        pushUndo('حذف مبنى');
+        S.buildings=S.buildings.filter(x=>x.id!==bid);
+        S.classes.forEach(c=>{if(c.bld===bid)c.bld=''});
+        if(UI.mapBld===bid)UI.mapBld='all';
+        save();render();toast('تم حذف المبنى ✓');
+      };
+    });
+  };
+  render();
+}
+
+function vFloorMapCard(){
+  const today=new Date().getDay();
+  const day=UI.mapDay!=null?UI.mapDay:(today===5?6:today);
+  const sh=UI.mapSh||'m';
+  const P=S.periods[sh]||[];
+  const p=UI.mapP!=null?UI.mapP:detectNowPeriod(sh);
+  const pr=P[p-1];
+
+  return'<div class="card" style="margin-top:12px">'
+   +'<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">'
+   +'<div><h3>🏛️ اللوحة الأصلية للأدوار والمباني</h3><p class="note">اعرف فورًا مين من المدرسين في المبنى الأساسي أو المبنى الفرعي في كل دور وكل حصة.</p></div>'
+   +'<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">'+(UI.mapP==null&&UI.mapDay==null?(isBreakNow(sh)?'<span class="pill warn">☕ وقت الفسحة الآن</span>':'<span class="pill ok">🟢 مباشر الآن · '+(DN[day]||'')+' · الحصة '+p+(pr?' ('+hm(pr.s)+')':'')+'</span>'):'<span class="pill ok">'+(DN[day]||'')+' · الحصة '+p+(pr?' ('+hm(pr.s)+')':'')+'</span><button class="btn ghost sm" data-a="mapNow">🔄 عودة للوقت الحالي</button>')+'</div>'
+   +'</div>'
+   +'<div class="seg" style="margin-top:10px">'
+   +[['all','كل المباني'],...getBlds().map(b=>[b.id,'🏛️ '+b.name])].map(([k,lbl])=>'<button data-a="mapBld" data-v="'+k+'" class="'+((UI.mapBld||'all')===k?'on':'')+'">'+esc(lbl)+'</button>').join('')
+   +'</div>'
+   +'<div style="display:flex;justify-content:flex-end;margin-top:6px"><button class="btn ghost sm" data-a="bldsDlg">⚙️ إضافة / حذف مبنى</button></div>'
+   +'<div class="search-bar"><div class="search-box"><input id="mapSearch" placeholder="ابحث باسم المدرّس أو الفصل أو المادة..." value="'+esc(UI.mapQ||'')+'"></div></div>'
+   +'<div class="row">'
+   +'<div><label>اليوم</label><select id="mapDay">'+DAYS.map(d=>'<option value="'+d+'"'+(d===day?' selected':'')+'>'+DN[d]+'</option>').join('')+'</select></div>'
+   +'<div><label>الفترة</label><select id="mapSh">'+['m','x','e'].map(k=>'<option value="'+k+'"'+(k===sh?' selected':'')+'>'+SI[k]+' '+SHN[k]+'</option>').join('')+'</select></div>'
+   +'<div><label>الحصة</label><select id="mapP">'+P.map((q,i)=>'<option value="'+(i+1)+'"'+((i+1)===p?' selected':'')+'>الحصة '+(i+1)+' ('+hm(q.s)+')</option>').join('')+'</select></div>'
+   +'</div>'
+   +'<div id="floorMapBody">'+renderFloorMapBody()+'</div>'
+   +'</div>';
+}
+
 function vDashboard(){
   const cf=allConflicts(),totalQuota=S.teachers.reduce((a,t)=>a+(+t.quota||0),0),assigned=S.slots.reduce((a,s)=>a+s.n,0),remaining=Math.max(0,totalQuota-assigned);
   const pct=totalQuota?Math.min(100,Math.round((assigned/totalQuota)*100)):0;
@@ -991,7 +1311,7 @@ function vDashboard(){
    +'<div class="card" style="margin:0"><h3>متابعة النصاب</h3>'+(attention.length?'<div class="dashlist" style="margin-top:8px">'+attention.map(x=>'<div class="dashrow"><div><b>'+esc(x.t.name)+'</b><small> · '+(x.q>x.n?'متبقي '+(x.q-x.n):'زيادة '+(x.n-x.q))+'</small></div><span class="pill '+(x.n>x.q?'bad':'warn')+'">'+x.n+' / '+x.q+'</span></div>').join('')+'</div>':'<p class="note" style="margin-top:6px">جميع الأنصبة المسجّلة متوازنة حاليًا.</p>')+'</div>'
    +'<div class="card" style="margin:0"><h3>إجراءات سريعة</h3><div class="acts" style="margin-top:10px"><button class="btn g" data-a="tab" data-v="plan">فتح الجدول</button><button class="btn alt" data-a="tab" data-v="subs">الاحتياطي اليومي</button><button class="btn alt" data-a="tab" data-v="teachers">المدرسين</button><button class="btn ghost" data-a="qualityDlg">📊 جودة الجدول</button><button class="btn ghost" data-a="tab" data-v="print">الطباعة</button><button class="btn ghost" data-a="tab" data-v="publish">النشر</button><button class="btn ghost" data-a="bk">💾 نسخة احتياطية</button></div>'
    +'<div class="dashlist" style="margin-top:12px"><div class="dashrow"><b>المتبقي من النصاب</b><span class="pill '+(remaining?'warn':'ok')+'">'+remaining+' حصة</span></div><div class="dashrow"><b>آخر نسخة منشورة</b><span class="pill ok">'+(S.pubVer?'النسخة '+S.pubVer:'لم يُنشر بعد')+'</span></div></div></div>'
-   +'</div>';
+   +'</div>'+vFloorMapCard();
 }
 
 function vPlan(){
@@ -1158,7 +1478,9 @@ function renderClassesList(){
   if(!filtered.length)return'<div class="card c"><p class="note">لا توجد فصول مطابقة للبحث أو الفلتر الحالي.</p></div>';
   return filtered.map(c=>{
     const cnt=S.slots.filter(s=>s.c===c.id).reduce((a,s)=>a+s.n,0);
-    return'<div class="card item" data-a="cedit" data-id="'+c.id+'"><div><b>'+esc(c.name)+'</b><small>'+cnt+' حصة في الأسبوع</small></div><span class="pill '+(cnt?'ok':'warn')+'">'+(cnt?cnt+' حصة':'فارغ')+' ✏️</span></div>';
+    const blOpts='<option value="">— المبنى —</option>'+getBlds().map(b=>'<option value="'+b.id+'"'+(c.bld===b.id?' selected':'')+'>'+esc(b.name)+'</option>').join('');
+    const flOpts='<option value="">— الدور —</option>'+floorsForBld(c.bld).map(([fk,fl])=>'<option value="'+fk+'"'+(String(c.floor||'')===fk?' selected':'')+'>'+fl+'</option>').join('');
+    return'<div class="card item" style="cursor:default;flex-wrap:wrap"><div style="cursor:pointer;flex:1;min-width:110px" data-a="cedit" data-id="'+c.id+'"><b>'+esc(c.name)+'</b><small>'+cnt+' حصة في الأسبوع</small></div><div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap"><select data-cbld="'+c.id+'" style="width:auto;padding:5px 7px;font-size:12px">'+blOpts+'</select><select data-cfloor="'+c.id+'" style="width:auto;padding:5px 7px;font-size:12px">'+flOpts+'</select><button type="button" class="btn ghost sm" data-a="flyEdit" data-id="'+c.id+'" title="إعدادات الفصل الطائر">'+(isFlyingClass(c)?'✈️ طائر':'✈️')+'</button><span class="pill '+(cnt?'ok':'warn')+'" style="cursor:pointer" data-a="cedit" data-id="'+c.id+'">'+(cnt?cnt+' حصة':'فارغ')+' ✏️</span></div></div>';
   }).join('');
 }
 
@@ -1356,7 +1678,7 @@ function applyClassBudget(){
 
 function vSupervision(){
   if(!Array.isArray(S.supervision))S.supervision=[];
-  if(!Array.isArray(S.supAreas)||!S.supAreas.length||(S.supAreas.length===5&&S.supAreas[2]==='الدور الأول'&&S.supAreas[3]==='الدور الثاني'&&S.supAreas[4]==='البوابة'))S.supAreas=d.supAreas;
+  if(!Array.isArray(S.supAreas)||!S.supAreas.length||(S.supAreas.length===5&&S.supAreas[2]==='الدور الأول'&&S.supAreas[3]==='الدور الثاني'&&S.supAreas[4]==='البوابة'))S.supAreas=d.supAreas;if(!Array.isArray(S.buildings)||!S.buildings.length)S.buildings=d.buildings;
   const sh=UI.supSh||'m';
   const rows=DAYS.map(d=>{
     const cells=S.supAreas.map((area,ai)=>{
@@ -1474,6 +1796,107 @@ function copyPlanDlg(){
   };
 }
 
+
+const DAY_PAIRS=[
+  {id:'st',label:'السبت / الثلاثاء',days:[6,2],cls:'fly-pair-0',bg:'#FEF08A'},
+  {id:'aw',label:'الأحد / الأربعاء',days:[0,3],cls:'fly-pair-1',bg:'#FED7AA'},
+  {id:'mk',label:'الاثنين / الخميس',days:[1,4],cls:'fly-pair-2',bg:'#FBCFE8'}
+];
+function getClassLocForDay(c,day){
+  if(c&&c.fly&&typeof c.fly==='object'){
+    const pair=DAY_PAIRS.find(dp=>dp.days.includes(+day));
+    if(pair&&c.fly[pair.id]&&(c.fly[pair.id].bld||c.fly[pair.id].floor!=='')){
+      return{bld:c.fly[pair.id].bld||c.bld||'',floor:c.fly[pair.id].floor!==undefined&&c.fly[pair.id].floor!==''?String(c.fly[pair.id].floor):String(c.floor||''),isFly:true,room:c.fly[pair.id].room||''};
+    }
+  }
+  return{bld:(c&&c.bld)||'',floor:String((c&&c.floor)||''),isFly:false,room:''};
+}
+function isFlyingClass(c){
+  if(!c||!c.fly)return false;
+  return DAY_PAIRS.some(dp=>c.fly[dp.id]&&(c.fly[dp.id].bld||c.fly[dp.id].floor!==''));
+}
+function flyingClassEditDlg(cid){
+  const c=cById(cid);if(!c)return;
+  if(!c.fly)c.fly={};
+  const blds=getBlds();
+  const rows=DAY_PAIRS.map(dp=>{
+    const cur=c.fly[dp.id]||{bld:c.bld||'',floor:c.floor||'',room:''};
+    const bOpts='<option value="">— الافتراضي ('+esc((blds.find(b=>b.id===c.bld)||{}).name||'غير محدد')+') —</option>'+blds.map(b=>'<option value="'+b.id+'"'+(cur.bld===b.id?' selected':'')+'>'+esc(b.name)+'</option>').join('');
+    const flList=floorsForBld(cur.bld||c.bld);
+    const fOpts='<option value="">— الافتراضي —</option>'+flList.map(([fk,fl])=>'<option value="'+fk+'"'+(String(cur.floor||'')===fk?' selected':'')+'>'+fl+'</option>').join('');
+    return'<div class="card" style="margin:8px 0;padding:10px;border-inline-start:5px solid '+dp.bg+'">'
+     +'<b style="display:block;margin-bottom:6px">'+dp.label+'</b>'
+     +'<div class="row">'
+     +'<div><label>المبنى</label><select data-fly-b="'+dp.id+'">'+bOpts+'</select></div>'
+     +'<div><label>الدور</label><select data-fly-f="'+dp.id+'">'+fOpts+'</select></div>'
+     +'<div><label>رقم الحجرة (اختياري)</label><input data-fly-r="'+dp.id+'" value="'+esc(cur.room||'')+'" placeholder="مثال: حجرة 3"></div>'
+     +'</div></div>';
+  }).join('');
+  modal('<h3>✈️ إعدادات الفصل الطائر: '+esc(c.name)+'</h3><p class="note">حدد المبنى والدور الذي يتواجد فيه الفصل في كل مجموعة أيام بالتبادل.</p>'
+   +rows
+   +'<div class="acts"><button class="btn g" id="flySave">حفظ</button><button class="btn red sm" id="flyClr">إلغاء نظام الطيران لهذا الفصل</button><button class="btn ghost" id="flyNo">إغلاق</button></div>');
+  $('#flyNo').onclick=closeM;
+  $('#flyClr').onclick=()=>{pushUndo('إلغاء فصل طائر');delete c.fly;save();closeM();go();toast('تم إرجاع الفصل '+c.name+' كفصل ثابت ✓')};
+  $('#flySave').onclick=()=>{
+    pushUndo('تعديل الفصل الطائر');
+    c.fly={};
+    DAY_PAIRS.forEach(dp=>{
+      const b=$('[data-fly-b="'+dp.id+'"]').value;
+      const f=$('[data-fly-f="'+dp.id+'"]').value;
+      const r=$('[data-fly-r="'+dp.id+'"]').value.trim();
+      if(b||f!==''||r)c.fly[dp.id]={bld:b,floor:f,room:r};
+    });
+    save();closeM();go();toast('✓ تم حفظ أماكن الفصل الطائر '+c.name);
+  };
+}
+function flyingBoardDlg(){
+  const blds=getBlds();
+  const flying=S.classes.filter(isFlyingClass);
+  const tables=blds.map(b=>{
+    const fls=floorsForBld(b.id);
+    const body=fls.map(([fk,flName])=>{
+      return DAY_PAIRS.map((dp,di)=>{
+        const day=dp.days[0];
+        const here=S.classes.filter(c=>{const loc=getClassLocForDay(c,day);return loc.bld===b.id&&loc.floor===fk});
+        return'<tr>'+(di===0?'<td rowspan="3" style="font-weight:800;background:#F1F5F9;color:#1B4353">'+esc(flName)+'</td>':'')
+         +'<td class="'+dp.cls+'" style="font-weight:800;white-space:nowrap">'+dp.label+'</td>'
+         +'<td class="'+dp.cls+'" style="text-align:right">'+(here.length?here.map(c=>'<span style="display:inline-block;background:rgba(255,255,255,.78);padding:2px 7px;border-radius:6px;margin:2px;font-weight:800">'+esc(c.name)+(isFlyingClass(c)?' ✈️':'')+'</span>').join(''):'<span style="opacity:.55">فارغ</span>')+'</td>'
+         +'</tr>';
+      }).join('');
+    }).join('');
+    return'<h4 style="margin:12px 0 6px">🏛️ '+esc(b.name)+'</h4><div class="gwrap"><table class="fly-tbl"><thead><tr><th style="width:90px">الدور</th><th style="width:120px">الأيام</th><th>الفصول المتواجدة</th></tr></thead><tbody>'+body+'</tbody></table></div>';
+  }).join('');
+
+  modal('<h3>✈️ لوحة الفصول الطائرة وتوزيع المباني</h3>'
+   +'<p class="note">توزيع الفصول على المباني والأدوار في أيام التبادل الثلاثة ('+flying.length+' فصل طائر مسجل حاليًا).</p>'
+   +'<div class="row" style="align-items:end;margin:8px 0"><div style="flex:2"><label>تعيين / تعديل فصل طائر</label><select id="flyPickC"><option value="">— اختر فصلًا —</option>'+classSelectOptions('')+'</select></div><div><button class="btn g" id="flyEditBtn" style="width:100%">✈️ ضبط أيامه</button></div></div>'
+   +tables
+   +'<div class="acts"><button class="btn alt" id="flyPrintBtn">🖨️ طباعة لوحة الفصل الطائر</button><button class="btn ghost" id="flyBoardClose">إغلاق</button></div>');
+  $('#flyBoardClose').onclick=closeM;
+  $('#flyEditBtn').onclick=()=>{const cid=$('#flyPickC').value;if(!cid){toast('اختر فصلًا أولًا.');return}flyingClassEditDlg(cid)};
+  $('#flyPrintBtn').onclick=()=>{
+    applyPrintCfg();
+    const pages=blds.map(b=>{
+      const fls=floorsForBld(b.id);
+      const body=fls.map(([fk,flName])=>DAY_PAIRS.map((dp,di)=>{
+        const day=dp.days[0];
+        const here=S.classes.filter(c=>{const loc=getClassLocForDay(c,day);return loc.bld===b.id&&loc.floor===fk});
+        return'<tr>'+(di===0?'<td rowspan="3" class="day">'+esc(flName)+'</td>':'')
+         +'<td class="'+dp.cls+'" style="font-weight:800;width:115px;-webkit-print-color-adjust:exact;print-color-adjust:exact">'+dp.label+'</td>'
+         +'<td class="'+dp.cls+'" style="text-align:right;padding:4px 8px;-webkit-print-color-adjust:exact;print-color-adjust:exact">'+(here.length?here.map(c=>'<b style="display:inline-block;background:rgba(255,255,255,.8);border:1px solid #94A3B8;padding:2px 8px;border-radius:6px;margin:2px">'+esc(c.name)+(isFlyingClass(c)?' ✈️':'')+'</b>').join(''):'فارغ')+'</td>'
+         +'</tr>';
+      }).join('')).join('');
+      return'<section class="print-page">'
+       +'<div class="p-banner"><div class="p-banner-r"><div class="p-banner-ico">✈️</div><div><h1>لوحة توزيع الفصول الطائرة — '+esc(b.name)+'</h1><div class="p-sub">'+esc([S.school.name||'جدول المدرسة',S.school.admin,S.school.gov].filter(Boolean).join(' · '))+'</div></div></div>'
+       +'<div class="p-badge"><small>المبنى</small><b>'+esc(b.name)+'</b></div></div>'
+       +'<div class="p-body"><table class="fly-tbl"><thead><tr><th>الدور</th><th>الأيام</th><th>الفصول المتواجدة</th></tr></thead><tbody>'+body+'</tbody></table></div>'
+       +'<div class="p-footer"><div>الفصول الطائرة: '+flying.length+'</div><div>تاريخ الطباعة: '+esc(printStamp())+'</div></div></section>';
+    }).join('');
+    $('#printArea').innerHTML=pages;
+    closeM();setTimeout(()=>window.print(),80);
+  };
+}
+
 function vClasses(){
   const rooms=S.rooms||[];
   return'<div class="card"><h3>الغرف والمعامل ('+rooms.length+')</h3><p class="note">أضف المعامل أو القاعات الخاصة (مثل: معمل العلوم، معمل الحاسب، الملعب) لمنع تعارض حجزها.</p>'
@@ -1481,7 +1904,7 @@ function vClasses(){
    +(rooms.length?'<div style="display:grid;gap:8px;margin-top:10px">'+rooms.map(r=>'<div class="dashrow" style="cursor:pointer" data-a="redit" data-id="'+r.id+'"><div><b>'+esc(r.name)+'</b><small> · '+S.slots.filter(s=>s.r===r.id).reduce((a,s)=>a+s.n,0)+' حصة محجوزة</small></div><span>✏️</span></div>').join('')+'</div>':'')
    +'</div>'
    +'<div class="card"><h3>الفصول ('+S.classes.length+')</h3>'
-   +'<div class="acts" style="margin-top:6px"><button class="btn g" data-a="cadd">＋ إضافة فصل</button><button class="btn alt" data-a="tab" data-v="budget">⚡ توليد من إحصائية الفصول</button></div>'
+   +'<div class="acts" style="margin-top:6px"><button class="btn g" data-a="cadd">＋ إضافة فصل</button><button class="btn" data-a="flyBoard">✈️ الفصل الطائر</button><button class="btn alt" data-a="tab" data-v="budget">⚡ إحصائية الفصول</button></div>'
    +'<div class="search-bar"><div class="search-box"><input id="cSearch" placeholder="ابحث عن فصل مثل 2/4..." value="'+esc(UI.cQ)+'"></div></div>'
    +'<div class="chips">'
    +[['all','الكل'],['1','الصف 1'],['2','الصف 2'],['3','الصف 3'],['4','الصف 4'],['5','الصف 5'],['6','الصف 6'],['other','أخرى']].map(([k,lbl])=>'<button class="chip'+(UI.cG===k?' on':'')+'" data-a="cg" data-v="'+k+'">'+lbl+'</button>').join('')
@@ -1934,12 +2357,12 @@ function teacherDlg(id,preSub){
 
 function classDlg(id){
   const ex=id?cById(id):null;
-  modal((ex?'<h3>تعديل فصل</h3><label>اسم الفصل</label><input id="cN" value="'+esc(ex.name)+'">':'<h3>إضافة أو اختيار فصل</h3><label>اسم فصل جديد (مثل 1/21 أو KG1)</label><input id="cNew" placeholder="اتركه فارغًا للاختيار من القائمة"><label>أو اختر من القائمة</label><select id="cNSelect"><option value="">اختر الفصل</option>'+classSelectOptions('')+'</select>')
+  modal((ex?'<h3>تعديل فصل</h3><label>اسم الفصل</label><input id="cN" value="'+esc(ex.name)+'"><div class="row"><div><label>المبنى</label><select id="cB"><option value="">— غير محدد —</option>'+getBlds().map(b=>'<option value="'+b.id+'"'+(ex.bld===b.id?' selected':'')+'>'+esc(b.name)+'</option>').join('')+'</select></div><div><label>الدور</label><select id="cF"><option value="">— غير محدد —</option>'+floorsForBld(ex.bld).map(([fk,fl])=>'<option value="'+fk+'"'+(String(ex.floor||'')===fk?' selected':'')+'>'+fl+'</option>').join('')+'</select></div></div>':'<h3>إضافة أو اختيار فصل</h3><label>اسم فصل جديد (مثل 1/21 أو KG1)</label><input id="cNew" placeholder="اتركه فارغًا للاختيار من القائمة"><label>أو اختر من القائمة</label><select id="cNSelect"><option value="">اختر الفصل</option>'+classSelectOptions('')+'</select>')
    +'<div class="err" id="cE"></div><div class="acts"><button class="btn g" id="cOk">حفظ</button><button class="btn ghost" id="cNo">إلغاء</button></div>'+(ex?'<div class="acts"><button class="btn red" id="cDel">🗑️ حذف الفصل</button></div>':''));
   $('#cNo').onclick=closeM;
   if(ex)$('#cDel').onclick=()=>{if(confirm('هتحذف الفصل وكل حصصه. متأكد؟')){pushUndo('حذف فصل');S.classes=S.classes.filter(x=>x.id!==id);S.slots=S.slots.filter(s=>s.c!==id);save();closeM();go();toast('تم حذف الفصل')}};
   $('#cOk').onclick=()=>{
-    if(ex){const name=$('#cN').value.trim();if(!name){$('#cE').textContent='اكتب اسم الفصل.';return}if(S.classes.some(x=>x.name===name&&x.id!==id)){$('#cE').textContent='الاسم مستخدم.';return}pushUndo('تعديل فصل');ex.name=name;save();closeM();go();return}
+    if(ex){const name=$('#cN').value.trim();if(!name){$('#cE').textContent='اكتب اسم الفصل.';return}if(S.classes.some(x=>x.name===name&&x.id!==id)){$('#cE').textContent='الاسم مستخدم.';return}pushUndo('تعديل فصل');ex.name=name;ex.bld=$('#cB').value;ex.floor=$('#cF').value;save();closeM();go();return}
     const custom=$('#cNew').value.trim();
     if(custom){
       if(S.classes.some(x=>x.name===custom)){$('#cE').textContent='الفصل موجود بالفعل.';return}
@@ -2111,8 +2534,68 @@ function vGit(){return'<div class="card"><h3>المزامنة مع GitHub</h3><p
   +'<div class="acts"><button class="btn alt" data-a="gtest">اختبار الاتصال</button><button class="btn g" data-a="gpull">⬇️ سحب</button><button class="btn" data-a="gpush">⬆️ حفظ الآن</button></div></div>'}
 
 
+
+/* ---------- Screenshot Capture (Offline & Online) ---------- */
+async function takeScreenshot(){
+  const savePng=async canvas=>{
+    const blob=await new Promise(res=>canvas.toBlob(res,'image/png'));
+    if(!blob)throw new Error('blob');
+    const name='school-screenshot-'+new Date().toISOString().slice(0,19).replace(/[:T]/g,'-')+'.png';
+    const f=new File([blob],name,{type:'image/png'});
+    try{if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:name});return}}catch(e){if(e.name==='AbortError')return}
+    const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;
+    document.body.appendChild(a);a.click();a.remove();
+    toast('📸 تم حفظ صورة الشاشة بنجاح ✓');
+  };
+
+  // Method 1: Native crisp tab capture (Chrome / Edge Desktop — 100% offline)
+  if(navigator.mediaDevices&&navigator.mediaDevices.getDisplayMedia){
+    try{
+      const stream=await navigator.mediaDevices.getDisplayMedia({video:{cursor:'never'},audio:false,preferCurrentTab:true});
+      const vid=document.createElement('video');
+      vid.srcObject=stream;vid.muted=true;
+      await new Promise(r=>{vid.onloadedmetadata=()=>{vid.play();setTimeout(r,120)}});
+      const canvas=document.createElement('canvas');
+      canvas.width=vid.videoWidth||1280;canvas.height=vid.videoHeight||720;
+      canvas.getContext('2d').drawImage(vid,0,0,canvas.width,canvas.height);
+      stream.getTracks().forEach(t=>t.stop());
+      await savePng(canvas);
+      return;
+    }catch(e){
+      if(e&&e.name==='NotAllowedError'){toast('تم إلغاء تصوير الشاشة.');return}
+    }
+  }
+
+  // Method 2: Pure-DOM SVG foreignObject fallback (for browsers without getDisplayMedia)
+  try{
+    const el=$('#main')||document.body;
+    const w=Math.max(el.scrollWidth,window.innerWidth),h=Math.max(el.scrollHeight,window.innerHeight);
+    const styles=[...document.querySelectorAll('style')].map(s=>s.textContent).join('\n');
+    const clone=document.body.cloneNode(true);
+    clone.querySelectorAll('script,#toast,dialog').forEach(x=>x.remove());
+    const xhtml=new XMLSerializer().serializeToString(clone);
+    const svg='<svg xmlns="http://www.w3.org/2000/svg" width="'+w+'" height="'+h+'"><foreignObject width="100%" height="100%"><div xmlns="http://www.w3.org/1999/xhtml" dir="rtl"><style>'+styles+'</style>'+xhtml+'</div></foreignObject></svg>';
+    const img=new Image();
+    const url=URL.createObjectURL(new Blob([svg],{type:'image/svg+xml;charset=utf-8'}));
+    await new Promise((res,rej)=>{img.onload=res;img.onerror=rej;img.src=url});
+    const canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;
+    canvas.getContext('2d').drawImage(img,0,0);URL.revokeObjectURL(url);
+    await savePng(canvas);
+  }catch(e){
+    toast('في الموبايل استخدم زر الشاشة بالهاتف، أو على الكمبيوتر اسمح بتصوير النافذة عند ظهور الرسالة.');
+  }
+}
+
 /* ---------- Arabic Voice Commands ---------- */
-let voiceRec=null;
+let voiceRec=null,voiceTimer=null;
+function stopVoice(){
+  clearTimeout(voiceTimer);voiceTimer=null;
+  const btn=$('#btnVoice');if(btn)btn.classList.remove('listening');
+  if(voiceRec){
+    const r=voiceRec;voiceRec=null;
+    try{r.onresult=r.onerror=r.onend=null;r.abort()}catch(e){}
+  }
+}
 function runVoiceCmd(raw){
   const cmd=normAr(raw);
   if(!cmd)return;
@@ -2157,24 +2640,28 @@ function toggleVoice(){
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
   const btn=$('#btnVoice');
   if(!SR){toast('الأوامر الصوتية مدعومة في متصفح Chrome وEdge على الكمبيوتر والأندرويد.');return}
-  if(voiceRec){try{voiceRec.stop()}catch(e){}return}
+  if(voiceRec){stopVoice();toast('🎙️ تم إيقاف الميكروفون');return}
   try{
-    voiceRec=new SR();
-    voiceRec.lang='ar-EG';
-    voiceRec.interimResults=false;
-    voiceRec.maxAlternatives=1;
+    const rec=new SR();
+    voiceRec=rec;
+    rec.lang='ar-EG';
+    rec.continuous=false;
+    rec.interimResults=false;
+    rec.maxAlternatives=1;
     btn.classList.add('listening');
-    toast('🎙️ تكلّم الآن بالأمر (مثل: افتح التوزيع، تراجع، فحص الجودة)...');
-    voiceRec.onresult=e=>{const txt=e.results[0]&&e.results[0][0]&&e.results[0][0].transcript;if(txt)runVoiceCmd(txt)};
-    voiceRec.onerror=e=>{toast(e.error==='not-allowed'?'اسمح للمتصفح باستخدام الميكروفون أولًا.':'تعذر سماع الصوت، جرّب مرة أخرى.')};
-    voiceRec.onend=()=>{btn.classList.remove('listening');voiceRec=null};
-    voiceRec.start();
-  }catch(e){btn.classList.remove('listening');voiceRec=null;toast('تعذر تشغيل الميكروفون.')}
+    toast('🎙️ تكلّم الآن بالأمر (وسيتوقف الميكروفون تلقائيًا)...');
+    voiceTimer=setTimeout(()=>{if(voiceRec===rec){stopVoice();toast('🎙️ انتهى وقت الاستماع')}},7000);
+    rec.onresult=e=>{const txt=e.results[0]&&e.results[0][0]&&e.results[0][0].transcript;stopVoice();if(txt)runVoiceCmd(txt)};
+    rec.onerror=e=>{stopVoice();toast(e.error==='not-allowed'?'اسمح للمتصفح باستخدام الميكروفون أولًا.':'تعذر سماع الصوت، جرّب مرة أخرى.')};
+    rec.onend=()=>{if(voiceRec===rec)stopVoice()};
+    rec.start();
+  }catch(e){stopVoice();toast('تعذر تشغيل الميكروفون.')}
 }
 
 /* ---------- events ---------- */
 $('#btnUndo').onclick=doUndo;
 $('#btnRedo').onclick=doRedo;
+$('#btnShot').onclick=takeScreenshot;
 $('#btnVoice').onclick=toggleVoice;
 $('#btnTheme').onclick=toggleTheme;
 $('#sideTheme').onclick=toggleTheme;
@@ -2244,6 +2731,11 @@ $('#main').onclick=e=>{
     case'cg':UI.cG=v;go();break;
     case'cused':UI.cUsedOnly=!UI.cUsedOnly;go();break;
     case'tadd':teacherDlg();break;
+    case'flyBoard':flyingBoardDlg();break;
+    case'flyEdit':flyingClassEditDlg(id);break;
+    case'bldsDlg':buildingsDlg();break;
+    case'mapNow':{UI.mapDay=null;UI.mapP=null;go();break}
+    case'mapBld':UI.mapBld=v;go();break;
     case'timport':{const fi=$('#teacherFile');if(fi){fi.value='';fi.click()}break}
     case'tSubTog':{const sub=a.dataset.sub;if(!UI.openSubs)UI.openSubs={};UI.openSubs[sub]=!UI.openSubs[sub];const el=$('#tList');if(el)el.innerHTML=renderTeachersList();break}
     case'taddSub':teacherDlg(null,a.dataset.sub);break;
@@ -2325,6 +2817,7 @@ $('#main').onclick=e=>{
 $('#main').oninput=e=>{
   const t=e.target;
     if(t.dataset.bg){if(!S.budget)S.budget={stage:'prim',counts:{}};if(!S.budget.counts)S.budget.counts={};S.budget.counts[t.dataset.bg]=Math.max(0,+t.value||0);save();const st=STAGES[S.budget.stage]||STAGES.prim;const tot=st.grades.reduce((s,g)=>s+Math.max(0,+S.budget.counts[g]||0),0);const el=$('#bTotal');if(el)el.textContent=tot+' فصل';return}
+  if(t.id==='mapSearch'){UI.mapQ=t.value;const el=$('#floorMapBody');if(el)el.innerHTML=renderFloorMapBody();return}
   if(t.id==='tSearch'){UI.tQ=t.value;const el=$('#tList');if(el)el.innerHTML=renderTeachersList();return}
   if(t.id==='cSearch'){UI.cQ=t.value;const el=$('#cList');if(el)el.innerHTML=renderClassesList();return}
   if(t.id==='planSearch'){
@@ -2359,6 +2852,11 @@ $('#main').onchange=e=>{
     if(t.value)S.supervision.push({day:d,sh,area,t:t.value});
     save();return;
   }
+    if(t.id==='mapDay'){UI.mapDay=+t.value;go();return}
+  if(t.id==='mapSh'){UI.mapSh=t.value;UI.mapP=null;go();return}
+  if(t.id==='mapP'){UI.mapP=+t.value;go();return}
+  if(t.dataset.cbld){const c=cById(t.dataset.cbld);if(c){c.bld=t.value;save();go();toast('تم تحديد المبنى للفصل '+c.name+' ✓')}return}
+  if(t.dataset.cfloor){const c=cById(t.dataset.cfloor);if(c){c.floor=t.value;save();toast('تم تحديد الدور للفصل '+c.name+' ✓')}return}
   if(t.id==='pSel'){if(t.value){UI.sel[UI.mode]=t.value;go()}return}
   if(t.id==='smartSel'){UI.smart[UI.mode]=t.value;go();return}
   if(t.id==='gT'){CFG.token=t.value.trim();saveCfg();cloud();return}
@@ -2422,6 +2920,12 @@ $('#main').addEventListener('drop',e=>{
   }
 });
 
+
+setInterval(()=>{
+  if(UI.tab==='dashboard'&&UI.mapP===null&&UI.mapDay===null&&!$('#dlg').open&&!document.hidden){
+    const fm=$('#floorMapBody');if(fm)go();
+  }
+},30000);
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
 go();
 if(cfgOk())setTimeout(()=>pullMaster(false),800);
