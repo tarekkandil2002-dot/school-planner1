@@ -1136,8 +1136,8 @@ function renderTeachersList(){
 function vTeachers(){
   const tot=S.teachers.reduce((a,t)=>a+(+t.quota||0),0),us=S.teachers.reduce((a,t)=>a+used(t),0);
   return'<div class="card"><h3>المدرسين ('+S.teachers.length+')</h3><p class="note">إجمالي النصاب '+tot+' · الموزّع '+us+'</p>'
-   +'<button class="btn g" data-a="tadd" style="width:100%;margin-top:8px">＋ إضافة مدرّس</button>'
-   +'<div class="dropzone" id="teacherDrop" style="margin-top:10px"><b>اسحب ملف المعلمين هنا</b><small>Excel أو CSV · يكفي وجود عمود «الاسم» فقط (وبقية الخانات اختيارية)</small><input type="file" id="teacherFile" accept=".xlsx,.xls,.csv,text/csv" hidden></div>'
+   +'<div class="acts" style="margin-top:8px"><button class="btn g" data-a="tadd">＋ إضافة مدرّس يدويًا</button><button class="btn alt" data-a="timport">📂 استيراد شيت المدرسين</button></div>'
+   +'<div class="dropzone" id="teacherDrop" style="margin-top:10px"><b>اسحب ملف المعلمين وأفلته هنا (أو اضغط للاختيار)</b><small>Excel أو CSV · يكفي وجود عمود «الاسم» فقط، وبعدها ستظهر المعاينة وتضغط «استيراد وحفظ»</small><input type="file" id="teacherFile" accept=".xlsx,.xls,.csv,text/csv" hidden></div>'
    +'<div class="search-bar"><div class="search-box"><input id="tSearch" placeholder="ابحث بالاسم أو المادة أو الكود..." value="'+esc(UI.tQ)+'"></div></div>'
    +'<div class="chips">'
    +[['all','الكل'],['ok','مكتمل ✓'],['under','ناقص'],['over','زيادة']].map(([k,lbl])=>'<button class="chip'+(UI.tF===k?' on':'')+'" data-a="tf" data-v="'+k+'">'+lbl+'</button>').join('')
@@ -2244,6 +2244,7 @@ $('#main').onclick=e=>{
     case'cg':UI.cG=v;go();break;
     case'cused':UI.cUsedOnly=!UI.cUsedOnly;go();break;
     case'tadd':teacherDlg();break;
+    case'timport':{const fi=$('#teacherFile');if(fi){fi.value='';fi.click()}break}
     case'tSubTog':{const sub=a.dataset.sub;if(!UI.openSubs)UI.openSubs={};UI.openSubs[sub]=!UI.openSubs[sub];const el=$('#tList');if(el)el.innerHTML=renderTeachersList();break}
     case'taddSub':teacherDlg(null,a.dataset.sub);break;
     case'tdelQuick':{const t=tById(id);if(!t)return;if(!confirm('هل تريد حذف المدرّس «'+t.name+'» وكل حصصه؟'))return;pushUndo('حذف مدرّس');S.teachers=S.teachers.filter(x=>x.id!==id);S.slots=S.slots.filter(s=>s.t!==id);save();go();toast('تم حذف المدرّس ✓');break}case'tedit':teacherDlg(id);break;
