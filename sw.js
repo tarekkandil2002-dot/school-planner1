@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smart-student-registry-fast-v1';
+const CACHE_NAME = 'smart-student-registry-turbo-v2';
 const ASSETS = [
   './',
   './index.html',
